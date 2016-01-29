@@ -28,12 +28,19 @@ def lookup_simile(path, vocab):
     #pick random choice from nouns for given key
     return random.choice(vocab['simile'][item])
 
-type_map = {"verb" : lookup_verb, "simile" : lookup_simile, "noun" : lookup_noun}
+def lookup_target(path, vocab):
+    type = path[0]
+    return vocab[type]
+
+type_map = {"verb" : lookup_verb, "simile" : lookup_simile, "noun" : lookup_noun, "target" : lookup_target, "targets" : lookup_target, "recipient" : lookup_target, "recipients" : lookup_target}
 def lookup_replacement(path, vocab):
     type = path[0]
     #get parsing function for this type
-    func = type_map[type]
-    return func(path, vocab)
+    if type in type_map:
+        func = type_map[type]
+        return func(path, vocab)
+    else:
+        return ' No parser function for {0} '.format(type)
         
 def parse_sentence(sentence, vocab):
     '''
@@ -59,15 +66,32 @@ def generate_sentences(num):
     with open('sentences.json') as sentencesfp, open('vocabulary.json') as vocabfp:
         sentences = json.load(sentencesfp)
         vocab = json.load(vocabfp)
-        count = 0
         finals = []
         while len(finals) < num:
-            sentence = random.choice(sentences)
+            sentence = random.choice(sentences["nontargeted"])
+            finals.append(parse_sentence(sentence, vocab))
+        return finals
+
+def generate_sentences_with_target(num, target, recipient):
+    with open('sentences.json') as sentencesfp, open('vocabulary.json') as vocabfp:
+        sentences = json.load(sentencesfp)
+        vocab = json.load(vocabfp)
+        #Add target/recipient to vocab
+        vocab['target'] = target
+        vocab['recipient'] = recipient
+        vocab['targets'] = target+"'s"
+        vocab['recipients'] = recipient+"'s"
+        finals = []
+        while len(finals) < num:
+            sentence = random.choice(sentences["targeted"])
             finals.append(parse_sentence(sentence, vocab))
         return finals
 
 
 
-finals = generate_sentences(3)
+finals = generate_sentences(1)
+print(finals)
+
+finals = generate_sentences_with_target(1, "bill", "gina")
 print(finals)
     
